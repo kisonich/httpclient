@@ -101,6 +101,21 @@ public class Server {
         System.out.println("Server stopped");
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private void sendResponse(BufferedOutputStream out, String status, String contentType, String message) throws IOException {
         String response = String.format(
                 "HTTP/1.1 %s\r\n" +
@@ -126,4 +141,6 @@ public class Server {
 
         server.start();
     }
+
+
 }
