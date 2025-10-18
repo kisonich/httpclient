@@ -22,24 +22,48 @@ public class Server {
     }
 
     private void registerHandlers() {
+        // Создаем сервлет и инициализируем его
+        PostServlet postServlet = new PostServlet();
+        postServlet.init();
+        PostController postController = postServlet.getController();
+
         // Обработчик для корневого пути
         handlerManager.registerHandler("/", (request, out) -> {
-            String response = "HTTP Server with Query Parameters Support\n\n" +
-                    "Method: " + request.getMethod() + "\n" +
-                    "Path: " + request.getPath() + "\n" +
-                    "Query String: " + request.getQueryString() + "\n" +
-                    "Query Parameters: " + request.getQueryParams() + "\n" +
-                    "Try: /messages?last=5&filter=new";
+            String response = "HTTP Server with Posts CRUD\n\n" +
+                    "Available endpoints:\n" +
+                    "GET /posts - get all posts\n" +
+                    "GET /posts/{id} - get post by ID\n" +
+                    "POST /posts - create new post (send content in body)\n" +
+                    "Example: curl -X POST -d 'Hello World' http://localhost:9999/posts";
             sendResponse(out, "200 OK", "text/plain", response);
         });
 
-        // Обработчик для /messages
+        // Обработчики для постов - ДОБАВЛЯЕМ ЭТИ СТРОКИ
+        handlerManager.registerHandler("/posts", (request, out) -> {
+            if ("GET".equals(request.getMethod())) {
+                postController.handleGetPosts(request, out);
+            } else if ("POST".equals(request.getMethod())) {
+                postController.handleCreatePost(request, out);
+            } else {
+                sendResponse(out, "405 Method Not Allowed", "text/plain", "Method not allowed");
+            }
+        });
+
+        // Обработчик для получения конкретного поста
+        handlerManager.registerHandler("/posts/", (request, out) -> {
+            if ("GET".equals(request.getMethod())) {
+                postController.handleGetPost(request, out);
+            } else {
+                sendResponse(out, "405 Method Not Allowed", "text/plain", "Method not allowed");
+            }
+        });
+
+        // Существующие обработчики /messages и /test (оставляем как есть)
         handlerManager.registerHandler("/messages", (request, out) -> {
             StringBuilder response = new StringBuilder();
             response.append("Messages Handler\n\n");
             response.append("Path: ").append(request.getPath()).append("\n");
 
-            // Демонстрация работы с query параметрами
             request.getQueryParam("last").ifPresent(last -> {
                 response.append("Last parameter: ").append(last).append("\n");
             });
@@ -53,7 +77,6 @@ public class Server {
             sendResponse(out, "200 OK", "text/plain", response.toString());
         });
 
-        // Обработчик для /test
         handlerManager.registerHandler("/test", (request, out) -> {
             String response = "Test Handler\n\n" +
                     "Query params: " + request.getQueryParams() + "\n" +

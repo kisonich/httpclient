@@ -20,14 +20,23 @@ public class HandlerManager {
         }
 
         String path = request.getPath();
-        RequestHandler handler = handlers.get(path);
 
+        RequestHandler handler = handlers.get(path);
         if (handler != null) {
             handler.handle(request, out);
             return true;
         }
 
-        // Попробуем найти обработчик для корневого пути, если конкретный не найден
+        for (String handlerPath : handlers.keySet()) {
+            if (path.startsWith(handlerPath) && handlerPath.endsWith("/")) {
+                handler = handlers.get(handlerPath);
+                if (handler != null) {
+                    handler.handle(request, out);
+                    return true;
+                }
+            }
+        }
+
         if (!path.equals("/")) {
             handler = handlers.get("/");
             if (handler != null) {
@@ -38,7 +47,6 @@ public class HandlerManager {
 
         return false;
     }
-
     public boolean hasHandler(String path) {
         return handlers.containsKey(path);
     }
